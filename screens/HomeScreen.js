@@ -8,7 +8,7 @@ import { getSavedItemsByDate, getAllVitaminsByDate } from '../backendjs/jssaved_
 import { getGarminKcalByDate, getGarminKcalFromCache } from '../backendjs/jsgarmin_kcal_export';
 
 export default function HomeScreen() {
-   
+  const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today;
@@ -129,26 +129,9 @@ export default function HomeScreen() {
   const fetchVitamineData  = async () => {
     const dateStr = getFormattedDate(selectedDate);
     const vitaminesJson = await getAllVitaminsByDate(dateStr);
-    
-    if (vitaminesJson.length !=0){
-
-      const vitamines_of_the_day = {};
-      nutrient_fields.forEach((vitamine_name) => {
-            vitamines_of_the_day[vitamine_name] = 0
-      })
-
-
-      vitaminesJson.forEach((vitamine_data) => {
-        nutrient_fields.forEach((vitamine_name) => {
-          vitamines_of_the_day[vitamine_name] += vitamine_data[vitamine_name];
-        })
-      })
-      console.log("aaaaaaaaaaaaaaaaa")
-      console.log("----",vitamines_of_the_day)
-    }
- 
-    setVitamines(vitamines_of_the_day);
+    setVitamines(vitaminesJson);
   }
+  
 
 
 
@@ -173,17 +156,17 @@ export default function HomeScreen() {
 
       <View>
         <Text style={styles.title}>Calories</Text>
-        <CalorieWheel consumed={consumed} target={target} />
+        <CalorieWheel consumed={consumed} target={target} onPress={() => navigation.navigate("Journal")}/>
       </View>
       <View>
         <Button title="fetchGarmin"   onPress={() => fetchGarminData()} />
       </View>
       <FlatList
-            data={vitamines}
-            keyExtractor={(item,index) =>  index}
+            data={Object.keys(vitamines)}
+            keyExtractor={(key) => key}
             renderItem={({ item }) => (
               <View style={styles.listItem}>
-                <Text> {nutrient_fields[index]} : {item} </Text>
+                <Text> {item} : {vitamines[item]} </Text>
               </View>
             )}
       />
