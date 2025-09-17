@@ -7,12 +7,14 @@ import {IP} from './config';
 import { getSavedItemsByDate, deleteSavedItem, } from '../backendjs/jssaved_item';
 
 
-export default function JournalScreen() {
+export default function JournalScreen({route}) {
   const [items, setItems] = useState([]);
   const navigation = useNavigation();
+  const { date } = route.params;
 
   const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
+    return date.toISOString().split('T')[0];
+    //return new Date().toISOString().split('T')[0];
   };
 
   const fetchTodayItems = async () => {

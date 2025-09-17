@@ -16,27 +16,30 @@ function TabNavigator() {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Journal" component={JournalScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
-
+/* <Stack.Screen 
+          name="Tabs" 
+          component={TabNavigator} 
+          options={{ headerShown: false }} 
+        />
+*/
 // 👇 Root stack wraps tabs + hidden screens
 export default function RootNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen 
-          name="Tabs" 
-          component={TabNavigator} 
-          options={{ headerShown: false }} 
-        />
+        <Stack.Screen name="Home" component={HomeScreen}  options={{ headerShown: false }}/>
+       
         <Stack.Screen 
           name="SavedItems" 
           component={SavedItemsScreen} 
           options={{ headerShown: false }} 
         />
+        <Stack.Screen name="Journal" component={JournalScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
