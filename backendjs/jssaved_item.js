@@ -11,12 +11,11 @@ export const addSavedItem = async (item,quantity,timestamp) => {
       savedItem.product_name = item.product_name;
       savedItem.quantity = quantity;
       savedItem.timestamp = new Date(timestamp).getTime();
-      savedItem.kcal = (item["energy_kcal_100g"]/100) * quantity
+      savedItem.kcal = Math.round((item["energy_kcal_100g"]/100) * quantity);
       nutrientFields.forEach((element) => savedItem[element] = item[element+"_100g"] || 0);
 
     });
   });
-  //console.log(await getAllSavedItems());
 };
 
 export const deleteSavedItem = async (code, timestamp) => {
@@ -41,7 +40,6 @@ export const getSavedItemsByDate = async (dateStr) => {
   const res = await savedItemsCollection
     .query(Q.where('timestamp', Q.between(start, end)))
     .fetch();
-  console.log(res)
   return res;
 };
 
@@ -68,13 +66,15 @@ export const getAllVitaminsByDate = async (dateStr) => {
     .query(Q.where('timestamp', Q.between(start, end)))
     .fetch();
 
-  // Initialize totals
-  const totals = {};
+  var totals = {};
   nutrientFields.forEach((field)=> totals[field] =0)
-  // Sum nutrients
-  items.forEach((item) => nutrientFields.forEach((field) => totals[field] += item[field]*(item[quantity]/100) || 0 ));
-  
 
+  items.forEach((item) => {
+    nutrientFields.forEach((field) => {
+      const value = item[field];
+      totals[field] += Math.round((value * item.quantity) / 100);
+    });
+  });
   return totals; // e.g. { protein: 23.2, ... }
 };
 

@@ -114,6 +114,18 @@ export default function SavedItemsScreen() {
         console.log("Backend response additemtodb:", res);
 
         fetchall()
+        /*const lastItem = await getItemByCode(barcode);
+        console.log('---------')
+        console.log(lastItem)
+        console.log(items)
+        let newItems = [...items];
+        newItems = {
+        ...newItems,
+        lastItem
+       };
+        setItems(newItems);
+        console.log(items)*/
+
       
         
     } catch (err) {
@@ -191,7 +203,7 @@ export default function SavedItemsScreen() {
     try {
       await deleteProduct(code);
 
-      fetchall()
+      setItems(prev => prev.filter(item => item.code !== code));
     } catch (err) {
       console.error("Failed to delete item:", err);
     }

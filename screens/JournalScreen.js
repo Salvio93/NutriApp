@@ -43,14 +43,7 @@ export default function JournalScreen() {
   }, []));
 const removeItem = async (id, code, timestamp) => {
   try {
-    /*await fetch(IP+'/saved/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, timestamp }),
-    });*/
     await deleteSavedItem(code,timestamp);
-    console.log("res:journal/delitem"+id +"-"+ code +"-"+ timestamp);
-
     // Remove item from local state
     setItems(prev => prev.filter(item => item.id !== id));
   } catch (err) {

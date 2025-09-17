@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -8,21 +9,35 @@ import ProfileScreen from '../screens/ProfileScreen';
 import SavedItemsScreen from '../screens/SavedItemsScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-export default function TabNavigator() {
-    
+// 👇 Bottom tabs only for visible icons
+function TabNavigator() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Journal" component={JournalScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// 👇 Root stack wraps tabs + hidden screens
+export default function RootNavigator() {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Journal" component={JournalScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-        <Tab.Screen name="SavedItems" component={SavedItemsScreen} options={{
-            tabBarButton: () => null,
-            tabBarVisible: false, // optional, hides while it's active
-            headerShown: false,    // or false depending on what you want
-          }} />
-      </Tab.Navigator>
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Tabs" 
+          component={TabNavigator} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="SavedItems" 
+          component={SavedItemsScreen} 
+          options={{ headerShown: false }} 
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
