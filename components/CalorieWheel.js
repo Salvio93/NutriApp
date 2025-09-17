@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text,TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
@@ -12,7 +12,7 @@ export default function CalorieWheel({ consumed, target }) {
 
   return (
     <View style={{ alignItems: 'center' }}>
-      <TouchableOpacity  onPress={() => navigation.navigate("Journal")}>
+      
       <Svg width={200} height={200}>
         <G rotation="-90" origin="100, 100">
           <Circle
@@ -36,7 +36,6 @@ export default function CalorieWheel({ consumed, target }) {
       <Text style={{ marginTop: 20, marginLeft:30, fontSize: 18 }}>
         {consumed} / {target} kcal
       </Text>
-      </TouchableOpacity>
     </View>
   );
 }

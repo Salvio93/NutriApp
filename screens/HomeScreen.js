@@ -156,7 +156,11 @@ export default function HomeScreen() {
 
       <View>
         <Text style={styles.title}>Calories</Text>
-        <CalorieWheel consumed={consumed} target={target} onPress={() => navigation.navigate("Journal")}/>
+        <TouchableOpacity  onPress={() => navigation.navigate("Journal", {
+            date: selectedDate,
+          })}>
+          <CalorieWheel consumed={consumed} target={target}/>
+        </TouchableOpacity>
       </View>
       <View>
         <Button title="fetchGarmin"   onPress={() => fetchGarminData()} />
