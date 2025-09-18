@@ -40,8 +40,7 @@ export const getUserData = async () => {
     weight: firstUser.weight,
     kcal: firstUser.kcal,
   };
-  console.log(userData);
-  return userData; // Only one row expected
+  return userData; 
 };
 
 export const updateUserData = async ({ gender, age, height, weight }) => {

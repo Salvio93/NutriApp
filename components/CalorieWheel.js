@@ -1,10 +1,8 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 export default function CalorieWheel({ consumed, target }) {
-  const navigation = useNavigation();
   const radius = 80;
   const strokeWidth = 20;
   const circumference = 2 * Math.PI * radius;
