@@ -39,7 +39,7 @@ export default function RootNavigator() {
           options={{ headerShown: false }} 
         />
         <Stack.Screen name="Journal" component={JournalScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen}  options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

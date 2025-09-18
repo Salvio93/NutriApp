@@ -37,7 +37,6 @@ export default function ProfileScreen() {
       const kcal = await updateUserData(tempData);
       tempData['kcal'] = kcal;
       setUserData(tempData);
-      console.log(tempData)
       setModalVisible(false);
     } catch (err) {
       console.error("Failed to save user data", err);

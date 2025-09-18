@@ -164,6 +164,7 @@ export default function HomeScreen() {
       </View>
       <View>
         <Button title="fetchGarmin"   onPress={() => fetchGarminData()} />
+        <Button title="Profile"   onPress={() => navigation.navigate("Profile")} />
       </View>
       <FlatList
             data={Object.keys(vitamines)}

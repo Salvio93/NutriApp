@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  container: { padding: 20 },
+  container: { padding: 20, marginTop:20, },
   label: { fontSize: 18, marginBottom: 10 },
   modalBackdrop: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
