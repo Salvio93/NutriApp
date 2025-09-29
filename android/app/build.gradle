@@ -86,7 +86,6 @@ android {
 
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
-
     namespace 'com.salvio93.mynutritionapp'
     defaultConfig {
         applicationId 'com.salvio93.mynutritionapp'
@@ -95,6 +94,7 @@ android {
         versionCode 1
         versionName "1.0.0"
     }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -148,6 +148,10 @@ android {
 }
 
 dependencies {
+
+    implementation 'com.google.android.gms:play-services-fitness:20.0.0'
+    implementation 'com.google.android.gms:play-services-auth:19.0.0'
+    implementation "com.google.android.gms:play-services-base:+"
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")

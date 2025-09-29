@@ -72,7 +72,7 @@ export const getAllVitaminsByDate = async (dateStr) => {
   items.forEach((item) => {
     nutrientFields.forEach((field) => {
       const value = item[field];
-      totals[field] += Math.round((value * item.quantity) / 100);
+      totals[field] += ((value * item.quantity) / 100);
     });
   });
   return totals; // e.g. { protein: 23.2, ... }

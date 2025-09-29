@@ -178,7 +178,7 @@ export default function SavedItemsScreen() {
 
 
 
-  const editableFields = Object.keys(fieldIndexMap).filter(key => key !== "code");
+  const editableFields = Object.keys(fieldIndexMap).map(k => k.replace(/-/g,'_')).filter(k => k !== "code");
 
   return (
     <View style={styles.container}>

@@ -53,8 +53,12 @@ export default function HomeScreen() {
         );
       }
       else{
-        const totalKcal = profileJson.kcal + activeJson['active_kcal']
-        setTarget(totalKcal || target || 2006);
+        if(activeJson['total_kcal'] !== activeJson['rest_kcal']){
+          const totalKcal =  activeJson['total_kcal']
+          setTarget(totalKcal || target || 2006);
+        }else{
+          console.log("No activity data")
+        }
       }
       console.log(activeJson)
 
@@ -69,11 +73,10 @@ export default function HomeScreen() {
       // Fetch profile
       const profileJson = await getUserData();
       
-      //const activeJson = await getGarminKcalFromCache(dateStr);
-      const activeJson = {'total_kcal':1, 'active_kcal':23}
+      const activeJson = await getGarminKcalFromCache(dateStr);
 
-      if (activeJson){
-        setTarget(profileJson.kcal + activeJson['active_kcal'])
+      if (activeJson && activeJson["total_kcal"]!==activeJson["rest_kcal"]){
+        setTarget(activeJson['total_kcal'])
       }
       else{
         setTarget( profileJson.kcal || 2006);
