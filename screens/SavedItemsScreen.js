@@ -8,11 +8,13 @@ import styles from './SavedItemsScreen.style';
 import BarcodeScanner from '../components/BarcodeScanner';
 import {IP} from './config';
 
-import { getAllItems, getLastItem, insertProductFromAPI, modifyProduct, deleteProduct, searchFoodOnline, getItemByName, getItemByCode } from '../backendjs/jsmain';
+import { getAllItems, getLastItem,insertProductBySearch, insertProductFromAPI, modifyProduct, deleteProduct, searchFoodOnline, getItemByName, getItemByCode } from '../backendjs/jsmain';
 import { addSavedItem, getAllSavedItems  } from '../backendjs/jssaved_item';
 
 
-export default function SavedItemsScreen() {
+export default function SavedItemsScreen({route}) {
+  const { date } = route.params;
+
   const [items, setItems] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,7 +69,7 @@ export default function SavedItemsScreen() {
 
     
 
-    const timestamp = new Date().toISOString(); // e.g. "2025-06-13T14:12:00Z"
+    const timestamp = date//new Date().toISOString(); // e.g. "2025-06-13T14:12:00Z"
 
     try {
       console.log(selectedItem.product_name);
@@ -109,7 +111,25 @@ export default function SavedItemsScreen() {
     }
   }
 
-    
+  const addItemToDBbySearch = async(item) => {
+    try {
+      const in_db = await getItemByCode(item.code);
+      if (in_db.length !=0){
+        console.log("Already in DB");
+        return
+      }
+      const res = await insertProductBySearch(item);
+      console.log("Backend response additemtodbbysearch:", res);
+
+      const [lastItem] = await getItemByCode(item.code); 
+      if (lastItem) {
+        setItems((prevItems) => [...prevItems, lastItem]);
+      }
+        
+    } catch (err) {
+      console.error("Failed to send to backend:", err);
+    }
+  }
   
   const fieldIndexMap = {
     "code": 0,
@@ -231,7 +251,7 @@ export default function SavedItemsScreen() {
               keyExtractor={(item, index) => item.code || index.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity onPress={() => {
-                  addItemToDB(item.code);
+                  addItemToDBbySearch(item);
                   setSearchModalVisible(false);
                   setSearchResults([]);
                 }}>

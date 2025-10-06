@@ -16,7 +16,8 @@ export default StyleSheet.create({
     flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)'
   },
   modalContent: {
-    backgroundColor: 'white', padding: 40, borderRadius: 10, width: '80%',
+    backgroundColor: 'white', padding: 40, borderRadius: 10, width: '90%',
+    maxHeight: '80%',
   },
   
   listItemSearch: {

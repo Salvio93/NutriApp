@@ -24,16 +24,18 @@ export const getItemByCode = async (code) => {
 
 export const insertProductFromAPI = async (barcode) => {
   try {
-    const res = await fetch(`https://world.openfoodfacts.net/api/v3/product/${barcode}?fields=product_name,nutriments`);
+    const res = await fetch(`https://world.openfoodfacts.net/api/v3/product/${barcode}?fields=product_name,abbreviated_product_name,generic_name,nutriments`);
     const json = await res.json();
     const product = json.product;
     
     if (!product) return { status: "no product" };
 
+    mergeEstimatedNutriments(product);
+
     const nutr = product.nutriments || {};
     const values = {
       code: barcode,
-      product_name: product.product_name || "Unknown",
+      product_name: product.abbreviated_product_name  || product.product_name || product.generic_name || "Unknown",
     };
 
 
@@ -56,6 +58,38 @@ export const insertProductFromAPI = async (barcode) => {
     return { status: "error" };
   }
 };
+
+
+
+export const insertProductBySearch = async (searched_item) => {
+  try {
+    const nutr = searched_item.nutriments || {};
+    const values = {
+      code: searched_item.code,
+      product_name: searched_item.product_name  || "Unknown",
+    };
+
+    fields.forEach(f => {
+      values[f.replace(/-/g, '_')] = parseFloat(nutr[f]) || 0;
+    });
+
+    const collection = await database.get('food_items');
+    await database.write(async () => {
+      await collection.create(item => {
+        Object.keys(values).forEach(key => {
+          item[key] = values[key];
+        });
+      });
+    });
+
+    return { status: "storedbysearch", name: searched_item.product_name };
+  } catch (err) {
+    console.error("Insert error", err);
+    return { status: "error" };
+  }
+};
+
+
 export const modifyProduct = async (updatedItem) => {
   try {
     if (!updatedItem.code) {
@@ -106,17 +140,67 @@ export const searchFoodOnline = async (query) => {
   const data = await res.json();
 
 
-  const filtered = data.products.filter((p) => {
-    // 1. Must have kcal4
-    console.log(p["product_name"])
-    const hasKcal = true//p["energy_kcal_100g"] && p["energy_kcal_100g"] > 0;
+  const filtered = data.products
+  .map((p) => mergeEstimatedNutriments(p))
+  .filter((p) => {
+    const hasKcal = checkHasKcal(p);
+    const hasName = checkHasName(p);
+    return hasKcal && hasName;
+  })
 
-    return hasKcal;
-  });
-
-  // 3. Limit to 10 items
-  return filtered.slice(0, 10).map((p) => ({
-    code: p.code,
-    product_name: p.product_name,
-  }));
+  // 3. Limit to 30 items
+  return filtered.slice(0, 30)
 };
+const checkHasKcal = (p) => {
+  if (!p?.nutriments) return false;
+
+  // already has kcal_100g
+  if (p.nutriments["energy-kcal_100g"] !== undefined) return true;
+
+  // fallback: energy-kcal (no _100g)
+  if (p.nutriments["energy-kcal"] !== undefined) {
+    p.nutriments["energy-kcal_100g"] = p.nutriments["energy-kcal"];
+    return true;
+  }
+
+  return false;
+};
+
+const checkHasName = (p) => {
+  const { abbreviated_product_name, product_name, generic_name } = p;
+
+  if (abbreviated_product_name && abbreviated_product_name.trim() !== "") {
+    p.product_name = abbreviated_product_name;
+    return true;
+  }
+
+  if (product_name && product_name.trim() !== "") {
+    p.product_name = product_name;
+    return true;
+  }
+
+  if (generic_name && generic_name.trim() !== "") {
+    p.product_name = generic_name;
+    return true;
+  }
+
+  return false;
+};
+
+const mergeEstimatedNutriments = (p) => {
+  if (!p.nutriments) p.nutriments = {};
+  const estimated = p.nutriments_estimated || {};
+
+  for (const key in estimated) {
+    if (
+      p.nutriments[key] === undefined ||
+      p.nutriments[key] === null ||
+      p.nutriments[key] === ""
+    ) {
+      p.nutriments[key] = estimated[key];
+    }
+  }
+
+  return p; // returns the updated product
+};
+
