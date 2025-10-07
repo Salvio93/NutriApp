@@ -26,9 +26,7 @@ export const getGarminKcalFromCache = async (dateStr) => {
 export const getGarminKcalByDate = async (dateStr) => {
   const now = dayjs();
   const tenMinAgo = now.subtract(10, 'minute');
-  console.log("date:",now)
-  console.log(dateStr)
-  console.log(dateStr == now.toISOString().split('T')[0])
+
   const result = await garminCollection.query(Q.where('date', dateStr)).fetch();
   const row = result[0];
   if (row && row.date === dateStr && dayjs(row.updated).isAfter(tenMinAgo)) {
@@ -38,7 +36,7 @@ export const getGarminKcalByDate = async (dateStr) => {
       rest_kcal: row.rest_kcal,
       active_kcal: row.active_kcal,
       updated: row.updated,
-      source: 'cache'
+      source: 'cache_of_today'
     };
   }
 
@@ -77,9 +75,9 @@ export const getGarminKcalByDate = async (dateStr) => {
     
     const data = {
       date: dateStr,
-      total_kcal: stats.totalKilocalories ?? Math.round(stats.calorie),
-      rest_kcal: stats.bmrKilocalories ?? 1486,
-      active_kcal: stats.calorie ?? 0,
+      total_kcal: stats.totalKilocalories ?? Math.round(stats.calorie), //no data with this shit api
+      rest_kcal: stats.bmrKilocalories ?? 1486, //no data with this shit api
+      active_kcal: Math.round(stats.calorie) ?? 0,
       updated: now.toISOString(),
     };
     console.log(data)
@@ -107,6 +105,7 @@ export const getGarminKcalByDate = async (dateStr) => {
       date: dateStr,
       total_kcal: data.total_kcal|| 0,
       rest_kcal: data.rest_kcal || 0,
+      active_kcal: data.active_kcal ||0,
       source: 'google-fit',
     };
   } catch (err) {
