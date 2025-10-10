@@ -7,6 +7,14 @@ export default function CalorieWheel({ consumed, target }) {
   const strokeWidth = 20;
   const circumference = 2 * Math.PI * radius;
   const progress = consumed / target;
+   // Calculate progress (can exceed 1)
+
+  // 🔥 Dynamic color
+  const progressColor = consumed > target ? '#ff3b30' : '#ffffffff';
+
+  // When over target, keep the full circle drawn (no overflow bug)
+  const dashOffset =
+    progress >= 1 ? 0 : circumference * (1 - Math.min(progress, 1));
 
   return (
     <View style={{ alignItems: 'center' }}>
@@ -14,24 +22,32 @@ export default function CalorieWheel({ consumed, target }) {
       <Svg width={200} height={200}>
         <G rotation="-90" origin="100, 100">
           <Circle
-            stroke="#eee"
+            stroke="#7c6f6fff"
             cx="100"
             cy="100"
             r={radius}
             strokeWidth={strokeWidth}
           />
           <Circle
-            stroke="#ff6347"
+            stroke="#1575f3ff"
             cx="100"
             cy="100"
             r={radius}
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - progress)}
-          />
+
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"          />
         </G>
       </Svg>
-      <Text style={{ marginTop: 20, marginLeft:30, fontSize: 18 }}>
+      <Text
+        style={{
+          marginTop: 20,
+          fontSize: 18,
+          fontWeight: '600',
+          color: progressColor,
+        }}
+      >
         {consumed} / {target} kcal
       </Text>
     </View>

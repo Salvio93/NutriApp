@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, Button, Modal, TextInput
+  View, Text, Button, Modal, TextInput, TouchableOpacity
 } from 'react-native';
 import styles from './ProfileScreen.styles';
 import { Picker } from '@react-native-picker/picker';
@@ -51,7 +51,9 @@ export default function ProfileScreen() {
       <Text style={styles.label}>Poids : {userData.weight} kg</Text>
       <Text style={styles.label}>Kcal : {userData.kcal}</Text>
 
-      <Button title="Modifier mes infos" onPress={() => setModalVisible(true)} />
+      <TouchableOpacity style={styles.roundButton} onPress={() => setModalVisible(true)}>
+      <Text style={styles.buttonText}>Modifier mes infos</Text>
+      </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalBackdrop}>

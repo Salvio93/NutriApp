@@ -6,7 +6,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getUserData } from '../backendjs/jsuser_data';
 import { getSavedItemsByDate, getAllVitaminsByDate } from '../backendjs/jssaved_item';
 import { getGarminKcalByDate, getGarminKcalFromCache } from '../backendjs/jsgarmin_kcal_export';
-
+import { Ionicons } from '@expo/vector-icons'; // Expo vector icons
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -77,7 +77,7 @@ export default function HomeScreen() {
     }
   };
 
-  async function  setTargetData(garminData){
+  function  setTargetData(garminData){
     const dateStr = getFormattedDate(selectedDate);
     // to set the target var
     
@@ -148,21 +148,21 @@ export default function HomeScreen() {
     "sugars": 50,
     "fat": 70,
     "fiber": 30,
-    "iron": 18,
-    "calcium": 1000,
-    "magnesium": 400,
-    "zinc": 11,
-    "vitamin_a": 900,
-    "vitamin_d": 15,
-    "vitamin_e": 15,
-    "vitamin_k": 120,
-    "vitamin_c": 90,
-    "vitamin_b1": 1.2,
-    "vitamin_b2": 1.3,
-    "vitamin_pp": 16,
-    "vitamin_b6": 1.3,
-    "vitamin_b9": 400,
-    "vitamin_b12": 2.4,
+    "iron": 18/1000,
+    "calcium": 800/1000,
+    "magnesium": 300/1000,
+    "zinc": 11/1000,
+    "vitamin_a": 900/1000000,
+    "vitamin_d": 15/1000000,
+    "vitamin_e": 15/1000,
+    "vitamin_k": 120/1000000,
+    "vitamin_c": 90/1000,
+    "vitamin_b1": 1.2/1000,
+    "vitamin_b2": 1.3/1000,
+    "vitamin_pp": 16/1000,
+    "vitamin_b6": 1.3/1000,
+    "vitamin_b9": 400/1000000,
+    "vitamin_b12": 2.4/1000000,
   };
   // Personalized scaling
   const scale = (profile?.kcal || 2000) / 2000;
@@ -177,11 +177,11 @@ export default function HomeScreen() {
 
   // Gender adjustments
   if (gender === "F") {
-    personalizedRDI.iron = 18;
-    personalizedRDI.zinc = 8;
+    personalizedRDI.iron = 18/1000;
+    personalizedRDI.zinc = 8/1000;
   } else {
-    personalizedRDI.iron = 8;
-    personalizedRDI.zinc = 11;
+    personalizedRDI.iron = 8/1000;
+    personalizedRDI.zinc = 11/1000;
   }
 
   const fetchVitamineData  = async () => {
@@ -213,13 +213,13 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
        {/* ⬅️ [Date] ➡️ Navigation */}
-      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+      <View style={{    color: '#fff', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
         <TouchableOpacity onPress={() => changeDate(-1)} style={{ paddingHorizontal: 20 }}>
-          <Text style={{ fontSize: 24 }}>←</Text>
+          <Text style={{     color: '#fff', fontSize: 24 }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{getFormattedDate(selectedDate)}</Text>
+        <Text style={{     color: '#fff',fontSize: 18, fontWeight: 'bold' }}>{getFormattedDate(selectedDate)}</Text>
         <TouchableOpacity onPress={() => changeDate(1)} style={{ paddingHorizontal: 20 }}>
-          <Text style={{ fontSize: 24 }}>→</Text>
+          <Text style={{     color: '#fff', fontSize: 24 }}>→</Text>
         </TouchableOpacity>
       </View>
 
@@ -232,8 +232,17 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       <View>
-        <Button title="fetchGarmin"   onPress={() => fetchGarminData()} />
-        <Button title="Profile"   onPress={() => navigation.navigate("Profile")} />
+        <TouchableOpacity style={styles.roundButton} onPress={fetchGarminData}>
+        <Text style={styles.buttonText}>Fetch Garmin</Text>
+        </TouchableOpacity>
+
+        {/* Profile Button as top-right gear */}
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <Ionicons name="settings-outline" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
       <FlatList
             data={Object.keys(vitamines)}
@@ -244,7 +253,7 @@ export default function HomeScreen() {
 
               return (
                 <View style={styles.listItem}>
-                  <Text style={styles.textItem}>
+                  <Text style={{    color: '#fff',}}>
                     {item}
                     :
                     {" "}
@@ -252,7 +261,7 @@ export default function HomeScreen() {
                     {rdi ? ` / ${rdi}` : ""}
                     {" "}
                     {rdi ? (
-                      <Text style={{ color: "#888" }}>
+                      <Text style={{ color: rdi && value < rdi ? 'orange' : 'green', }}>
                         ({Math.round((value / rdi) * 100)}%)
                       </Text>
                     ) : ""}

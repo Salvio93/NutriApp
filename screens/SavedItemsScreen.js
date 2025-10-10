@@ -202,13 +202,17 @@ export default function SavedItemsScreen({route}) {
 
   return (
     <View style={styles.container}>
-      <Button title="🔍 Search Food" onPress={() => setSearchModalVisible(true)} />
 
+      <TouchableOpacity style={styles.roundButton} onPress={() => setSearchModalVisible(true)}>
+      <Text style={styles.buttonText}>🔍 Search Food</Text>
+      </TouchableOpacity>
 
 
       
-      <Button title="📷 Scan Barcode" onPress={() => setScannerVisible(true)} />
 
+      <TouchableOpacity style={styles.roundButton} onPress={() => setScannerVisible(true)}>
+      <Text style={styles.buttonText}>📷 Scan Barcode</Text>
+      </TouchableOpacity>
       <Modal visible={scannerVisible} animationType="slide">
         <BarcodeScanner onScanned={handleBarcodeScanned} />
         <Button title="Cancel" onPress={() => setScannerVisible(false)} />
@@ -227,9 +231,19 @@ export default function SavedItemsScreen({route}) {
 
             {/* Buttons in a row below the name */}
             <View style={styles.buttonRow}>
-              <Button title="Add" onPress={() => openAddModal(item)} />
-              <Button title="Modify" onPress={() => openModifyModal(item)} />
-              <Button title="Delete" onPress={() => deleteData(item)} />
+
+
+              <TouchableOpacity style={styles.roundButton} onPress={() => openAddModal(item)}>
+              <Text style={styles.buttonText}>Add</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.roundButton} onPress={() => openModifyModal(item)}>
+              <Text style={styles.buttonText}>Modify</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.roundButton} onPress={() => deleteData(item)}>
+              <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -256,7 +270,7 @@ export default function SavedItemsScreen({route}) {
                   setSearchResults([]);
                 }}>
                   <View style={styles.listItemSearch}>
-                    <Text style={styles.name}>{item.product_name || 'Unnamed Item'}</Text>
+                    <Text style={styles.name_search}>{item.product_name || 'Unnamed Item'}</Text>
                   </View>
                 </TouchableOpacity>
               )}

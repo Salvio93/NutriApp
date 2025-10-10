@@ -1,8 +1,8 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  container: { padding: 20, marginTop:20, },
-  label: { fontSize: 18, marginBottom: 10 },
+  container: {flex:1, padding: 20, marginTop:50,    backgroundColor: '#252222ff', },
+  label: { fontSize: 18, marginBottom: 10, color: '#fff' },
   modalBackdrop: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)'
@@ -21,6 +21,19 @@ export default StyleSheet.create({
   pickerLabel: {
     fontWeight: 'bold',
     marginBottom: 4,
+  },
+  roundButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
+
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
   
 });

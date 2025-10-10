@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Button, FlatList, Text } from 'react-native';
+import { View, Button, FlatList, Text, TouchableOpacity } from 'react-native';
 import styles from './JournalScreen.styles';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {IP} from './config';
@@ -57,18 +57,24 @@ const removeItem = async (id, code, timestamp) => {
 
   return (
     <View style={styles.container}>
-      <Button title="📁 View Saved Items" onPress={() => navigation.navigate("SavedItems", {
+
+      <TouchableOpacity style={styles.roundButton} onPress={() => navigation.navigate("SavedItems", {
             date: getTodayDate(),
-          })} />
+          })}>
+      <Text style={styles.buttonText}>📁 View Saved Items</Text>
+      </TouchableOpacity>
       <FlatList
         data={items}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
-            <Text>{item.name.slice(0,30)} </Text>
-            <Text>{item.quantity}g </Text>
-            <Text>{item.kcal}kcal</Text>
-            <Button title="Remove"   onPress={() => removeItem(item.id, item.code, item.timestamp)} />
+            <Text style={styles.name}>{item.name.slice(0,30)} </Text>
+            <Text style={styles.name}>{item.quantity}g </Text>
+            <Text style={styles.name}>{item.kcal}kcal</Text>
+
+            <TouchableOpacity style={styles.roundButton} onPress={() => removeItem(item.id, item.code, item.timestamp)}>
+            <Text style={styles.buttonText}>Remove</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
