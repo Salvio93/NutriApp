@@ -1,6 +1,14 @@
 import { database } from './watermelondb/database';
-import { Q } from "@nozbe/watermelondb";
 
+//? await database usefull?
+
+/**
+ *  Calculates daily kcal needs based on gender and age
+ * 
+ * @param {Char} gender 
+ * @param {int} age 
+ * @returns 
+ */
 const calcKcal = (gender, age) => {
   const isFemale = gender === 'F';
   if (age < 4) return 1000;
@@ -12,7 +20,7 @@ const calcKcal = (gender, age) => {
   return isFemale ? 1600 : 2000;
 };
 
-// Creates default user row if not present
+// Creates default user row if not present or accesses existing one
 export const initUserData = async () => {
   const userCollection =  await database.get('user_data');
   const allUsers = await userCollection.query().fetch();
@@ -29,7 +37,7 @@ export const initUserData = async () => {
     });
   }
 };
-
+// Retrieves user data from the database
 export const getUserData = async () => {
   const user =  await database.get('user_data').query().fetch();
   const firstUser = user[0]
@@ -43,6 +51,7 @@ export const getUserData = async () => {
   return userData; 
 };
 
+// Updates user data in the database and recalculates kcal needs
 export const updateUserData = async ({ gender, age, height, weight }) => {
   const userCollection = await database.get('user_data');
   const [user] = await userCollection.query().fetch();

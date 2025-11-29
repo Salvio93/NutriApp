@@ -5,7 +5,7 @@ import GoogleFit, { Scopes, BucketUnit } from 'react-native-google-fit';
 
 const garminCollection = database.get('garmin_data');
 
-// ⏪ Pure local cache fetch
+// Pure local cache fetch
 export const getGarminKcalFromCache = async (dateStr) => {
   const result = await garminCollection.query(Q.where('date', dateStr)).fetch();
   const row = result[0];
@@ -22,11 +22,12 @@ export const getGarminKcalFromCache = async (dateStr) => {
   };
 };
 
-// 🌐 Smart fetch with cache check
+// Smart fetch with cache check
 export const getGarminKcalByDate = async (dateStr) => {
+  
+  // Check cache first (valid for 10 minutes)
   const now = dayjs();
   const tenMinAgo = now.subtract(10, 'minute');
-
   const result = await garminCollection.query(Q.where('date', dateStr)).fetch();
   const row = result[0];
   if (row && row.date === dateStr && dayjs(row.updated).isAfter(tenMinAgo)) {
@@ -40,10 +41,8 @@ export const getGarminKcalByDate = async (dateStr) => {
     };
   }
 
-
+  // Fetch from Google Fit API
   try {
-    
-
     const options = {
       scopes: [
         Scopes.FITNESS_ACTIVITY_READ,
@@ -52,10 +51,10 @@ export const getGarminKcalByDate = async (dateStr) => {
     };
 
     const authorized = await GoogleFit.authorize(options);
-
     if (!authorized.success) {
       return { error: 'Authorization failed'+ authorized.message };
     }
+
     const start = dayjs(dateStr).startOf('day').toDate();
     const end = dateStr === now.format('YYYY-MM-DD') ? now.toDate() : dayjs(dateStr).endOf('day').toDate();
 
@@ -71,7 +70,7 @@ export const getGarminKcalByDate = async (dateStr) => {
       console.log(res);
       stats = res[0]
     });
-    console.log(stats)
+
     
     const data = {
       date: dateStr,
@@ -80,8 +79,9 @@ export const getGarminKcalByDate = async (dateStr) => {
       active_kcal: Math.round(stats.calorie) ?? 0,
       updated: now.toISOString(),
     };
-    console.log(data)
     
+
+    //write in local db kcal expense
     await database.write(async () => {
       if (row) {
         await row.update(r => {
@@ -116,5 +116,3 @@ export const getGarminKcalByDate = async (dateStr) => {
   
 };
 
-
-//test

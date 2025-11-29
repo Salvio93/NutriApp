@@ -6,7 +6,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getUserData } from '../backendjs/jsuser_data';
 import { getSavedItemsByDate, getAllVitaminsByDate } from '../backendjs/jssaved_item';
 import { getGarminKcalByDate, getGarminKcalFromCache } from '../backendjs/jsgarmin_kcal_export';
-import { Ionicons } from '@expo/vector-icons'; // Expo vector icons
+import { Ionicons } from '@expo/vector-icons'; 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -14,10 +14,9 @@ export default function HomeScreen() {
     return today;
   });
   const [consumed, setConsumed] = useState(0);
-  const [target, setTarget] = useState(2000); // fallback default
-  const [vitamines, setVitamines] = useState([]); // fallback default
-
-  const [profile, setProfile] = useState([]); // fallback default
+  const [target, setTarget] = useState(2000); 
+  const [vitamines, setVitamines] = useState([]); 
+  const [profile, setProfile] = useState([]); 
 
   const getTodayDate = () => {
     return new Date().toISOString().split('T')[0];
@@ -25,6 +24,9 @@ export default function HomeScreen() {
 
   const getFormattedDate = (dateObj) => dateObj.toISOString().split('T')[0];
 
+  /**
+   * change date by offset days (navigate calendar)
+   */
   const changeDate = (offset) => {
     setSelectedDate(prev => {
       const newDate = new Date(prev);
@@ -36,22 +38,22 @@ export default function HomeScreen() {
         return await getUserData();
   }
   
-
+  /**
+   * Fetch garmin data at start or on button press
+   */
   const fetchGarminData = async () =>{
-
       const dateStr = getFormattedDate(selectedDate);
-      console.log(dateStr)
-      console.log(getTodayDate())
     try{
-
       const garmin_data = await getGarminKcalByDate(dateStr);
       setTargetData(garmin_data)
-
     }catch (err) {
       console.error("Error fetching garmin wheel data:", err);
     }
 
   }
+  /**
+   * Fetch wheel data of the day (journal) and garmin cache
+   */
   const fetchWheelData = async () => {
     const dateStr = getFormattedDate(selectedDate);
     try {
@@ -59,12 +61,10 @@ export default function HomeScreen() {
       const garmin_data = await getGarminKcalFromCache(dateStr);
       setTargetData(garmin_data)
 
-
-      // Fetch items from today
       const itemJson = await getSavedItemsByDate(dateStr);
 
 
-      var totalKcal = 0;
+      let totalKcal = 0;
       if (itemJson.length !=0){
         itemJson.forEach((element) => totalKcal += element["kcal"] || 0);
 
@@ -77,14 +77,12 @@ export default function HomeScreen() {
     }
   };
 
+  /**
+   * Used in fetchWheelData and fetchGarminData to set target kcal
+   */
   function  setTargetData(garminData){
-    const dateStr = getFormattedDate(selectedDate);
-    // to set the target var
-    
-    console.log(garminData)
-    console.log(dateStr, getTodayDate())
+    const dateStr = getFormattedDate(selectedDate);   
       if (garminData['total_kcal'] == null){
-        console.log("No data on garmin yet")
         Alert.alert(
           "No data on garmin yet",
           "Please synchronize your watch with your garming connect app",
@@ -92,7 +90,10 @@ export default function HomeScreen() {
         );
       }
       else{
-        if(dateStr !== getTodayDate()){
+        //! API is shit, can't return today data and sometimes has negative or no data 
+        if(dateStr === getTodayDate()){
+          setTarget(profile.kcal || 2006); //data of the day isn't ready for a fetch
+        }else{
           
           const totalKcal =  garminData['total_kcal']+garminData["rest_kcal"]
           console.log("isgreater",garminData['total_kcal']>1000)
@@ -102,46 +103,13 @@ export default function HomeScreen() {
           }else{ 
             setTarget(totalKcal || 2006);//some old data have total_kcal = 400kcal and restkcal = 1486
           }
-        }else{
-          setTarget(profile.kcal || 2006); //data of the day isn't ready for a fetch
         }
       }
-      console.log(garminData)
 
 
   }
-  const nutrient_fields = [
-    "proteins",
-    "carbohydrates",
-    "sugars",
-    "fat",
-    "omega-3-fat",
-    "omega-6-fat",
-    "omega-9-fat",
-    "cholesterol",
-    "fiber",
-    "sodium",
-    "potassium",
-    "calcium",
-    "iron",
-    "magnesium",
-    "zinc",
-    "alcohol",
-    "vitamin-a",
-    "vitamin-d",
-    "vitamin-e",
-    "vitamin-k",
-    "vitamin-c",
-    "vitamin-b1",
-    "vitamin-b2",
-    "vitamin-pp",
-    "vitamin-b6",
-    "vitamin-b9",
-    "vitamin-b12",
-    "nutrition-score-fr"
-]
-
-  // Base RDI constants
+  
+  // Base RDI values per day for an average adult
   const BASE_RDI = {
     "proteins": 50,
     "carbohydrates": 275,
@@ -164,12 +132,12 @@ export default function HomeScreen() {
     "vitamin_b9": 400/1000000,
     "vitamin_b12": 2.4/1000000,
   };
-  // Personalized scaling
+  // Personalized scaling with biometrics profile
   const scale = (profile?.kcal || 2000) / 2000;
   const weight = profile?.weight || 70;
-  const gender = profile?.gender || "H"; // default male
+  const gender = profile?.gender || "H"; 
 
-  // Adjusted RDI
+  // Adjusted RDI with biometrics data
   const personalizedRDI = { ...BASE_RDI };
   personalizedRDI.proteins = Math.max(0.8 * weight, BASE_RDI.proteins) * scale;
   personalizedRDI.carbohydrates = BASE_RDI.carbohydrates * scale;
@@ -196,9 +164,6 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     const fetchAll = async () => {
       const profile = await getProfileData();
-      console.log("Profile data:", profile);
-      
-      // You can store it in state if you want to use it later
       setProfile(profile);
 
       await fetchWheelData();

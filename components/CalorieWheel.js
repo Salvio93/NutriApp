@@ -7,9 +7,9 @@ export default function CalorieWheel({ consumed, target }) {
   const strokeWidth = 20;
   const circumference = 2 * Math.PI * radius;
   const progress = consumed / target;
-   // Calculate progress (can exceed 1)
+  // Calculate progress (can exceed 1)
 
-  // 🔥 Dynamic color
+  //Dynamic color
   const progressColor = consumed > target ? '#ff3b30' : '#ffffffff';
 
   // When over target, keep the full circle drawn (no overflow bug)

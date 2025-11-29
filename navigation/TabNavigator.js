@@ -11,22 +11,7 @@ import SavedItemsScreen from '../screens/SavedItemsScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// 👇 Bottom tabs only for visible icons
-function TabNavigator() {
-  return (
-    <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-}
-/* <Stack.Screen 
-          name="Tabs" 
-          component={TabNavigator} 
-          options={{ headerShown: false }} 
-        />
-*/
-// 👇 Root stack wraps tabs + hidden screens
+// hidden screens
 export default function RootNavigator() {
   return (
     <NavigationContainer>

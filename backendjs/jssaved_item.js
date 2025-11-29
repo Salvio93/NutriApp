@@ -2,8 +2,18 @@ import { database } from './watermelondb/database';
 import { Q } from "@nozbe/watermelondb";
 
 
-const savedItemsCollection = database.get('saved_items'); //ici
+const savedItemsCollection = database.get('saved_items');
 
+//? for each should be for.. of?
+//! The saved_items database is the journal of eaten items with quantity for a certain day (timestamp)
+
+/**
+ * Add a saved item to the journal of the current day (timestamp)
+ * 
+ * @param {Object} item 
+ * @param {int} quantity (in grams)
+ * @param {date} timestamp 
+ */
 export const addSavedItem = async (item,quantity,timestamp) => {
   await database.write(async () => {
     await savedItemsCollection.create(savedItem => {
@@ -18,10 +28,16 @@ export const addSavedItem = async (item,quantity,timestamp) => {
   });
 };
 
-export const deleteSavedItem = async (code, timestamp) => {
+/**
+ * Delete a saved item from the journal
+ * 
+ * @param {int} barcode 
+ * @param {date} timestamp 
+ */
+export const deleteSavedItem = async (barcode, timestamp) => {
   const matches = await savedItemsCollection
     .query(
-      Q.where('code', code),
+      Q.where('code', barcode),
       Q.where('timestamp', new Date(timestamp).getTime())
     )
     .fetch();
@@ -32,6 +48,7 @@ export const deleteSavedItem = async (code, timestamp) => {
     }
   });
 };
+
 
 export const getSavedItemsByDate = async (dateStr) => {
   const start = new Date(`${dateStr}T00:00:00`).getTime();
@@ -58,6 +75,12 @@ const nutrientFields = [
   "nutrition_score_fr"
 ];
 
+/**
+ * Calculates total vitamins and nutrients consumed on a given date of journal
+ * 
+ * @param {date} dateStr 
+ * @returns {array} totals (of each nutrient)
+ */
 export const getAllVitaminsByDate = async (dateStr) => {
   const start = new Date(`${dateStr}T00:00:00`).getTime();
   const end = new Date(`${dateStr}T23:59:59`).getTime();
@@ -66,7 +89,7 @@ export const getAllVitaminsByDate = async (dateStr) => {
     .query(Q.where('timestamp', Q.between(start, end)))
     .fetch();
 
-  var totals = {};
+  const totals = {};
   nutrientFields.forEach((field)=> totals[field] =0)
 
   items.forEach((item) => {

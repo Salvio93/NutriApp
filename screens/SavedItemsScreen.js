@@ -6,11 +6,11 @@ import {
 } from 'react-native';
 import styles from './SavedItemsScreen.style';
 import BarcodeScanner from '../components/BarcodeScanner';
-import {IP} from './config';
 
 import { getAllItems, getLastItem,insertProductBySearch, insertProductFromAPI, modifyProduct, deleteProduct, searchFoodOnline, getItemByName, getItemByCode } from '../backendjs/jsmain';
 import { addSavedItem, getAllSavedItems  } from '../backendjs/jssaved_item';
 
+//? replace to replaceall?
 
 export default function SavedItemsScreen({route}) {
   const { date } = route.params;
@@ -25,112 +25,7 @@ export default function SavedItemsScreen({route}) {
   const [modalModifyVisible, setmodalModifyVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
 
-  const fetchall = async () =>{
-      try{
-        const res = await getAllItems();
-        setItems(res || [])
-        console.log("fetchall");
-        console.log(res)
-  
-      } catch (err) {
-        console.error("Failed to send to backend:", err);
-      }
-    }
-  useFocusEffect(useCallback(() => {
-      fetchall();
-  }, []));
 
-  const handleSearchSubmit = async () => {
-    try {
-      Keyboard.dismiss();
-      //const res = await fetch(IP+`/scan/search/${searchQuery}`);
-      const res = await searchFoodOnline(searchQuery)
-      const json = JSON.stringify(res);
-      //console.log("search"+json);
-      setSearchResults(res || []);
-      setSearchModalVisible(true);  // show modal with results
-    } catch (err) {
-      console.error("Search failed:", err);
-    }
-    setItems(items.map(i => (i[0] === item[0] ? item : i)));
-  };
-  const openAddModal = (item) => {
-    setSelectedItem(item);
-    setQuantity('');
-    setmodalAddVisible(true);
-  };
-
-  const openModifyModal = (item) => {
-    setSelectedItem({ ...item._raw });
-    setmodalModifyVisible(true);
-  };
-  const addToJournal = async () => {
-    if (!quantity.trim()) return;
-
-    
-
-    const timestamp = date//new Date().toISOString(); // e.g. "2025-06-13T14:12:00Z"
-
-    try {
-      console.log(selectedItem.product_name);
-      await addSavedItem(selectedItem,parseFloat(quantity),timestamp);
-
-      console.log("saved/addtojournal", await getAllSavedItems());
-    } catch (err) {
-      console.error("Failed to save item to backend:", err);
-    }
-
-    setmodalAddVisible(false);
-  };
-
-
-  const handleBarcodeScanned = (barcode) => {
-    setScannerVisible(false);
-    addItemToDB(barcode);
-  };
-
-
-  
-  const addItemToDB = async(barcode) => {
-    try {
-      const in_db = await getItemByCode(barcode);
-      if (in_db.length !=0){
-        console.log("Already in DB");
-        return
-      }
-        const res = await insertProductFromAPI(barcode);
-        console.log("Backend response additemtodb:", res);
-
-        const [lastItem] = await getItemByCode(barcode); 
-        if (lastItem) {
-          setItems((prevItems) => [...prevItems, lastItem]);
-        }
-        
-    } catch (err) {
-      console.error("Failed to send to backend:", err);
-    }
-  }
-
-  const addItemToDBbySearch = async(item) => {
-    try {
-      const in_db = await getItemByCode(item.code);
-      if (in_db.length !=0){
-        console.log("Already in DB");
-        return
-      }
-      const res = await insertProductBySearch(item);
-      console.log("Backend response additemtodbbysearch:", res);
-
-      const [lastItem] = await getItemByCode(item.code); 
-      if (lastItem) {
-        setItems((prevItems) => [...prevItems, lastItem]);
-      }
-        
-    } catch (err) {
-      console.error("Failed to send to backend:", err);
-    }
-  }
-  
   const fieldIndexMap = {
     "code": 0,
     "product_name": 1,
@@ -171,7 +66,126 @@ export default function SavedItemsScreen({route}) {
   };
   
   
+  const fetchall = async () =>{
+      try{
+        const res = await getAllItems();
+        setItems(res || [])
+        console.log("fetchall");
+        console.log(res)
+  
+      } catch (err) {
+        console.error("Failed to send to backend:", err);
+      }
+    }
+  useFocusEffect(useCallback(() => {
+      fetchall();
+  }, []));
 
+  
+  const handleSearchSubmit = async () => {
+    try {
+      Keyboard.dismiss();
+      const res = await searchFoodOnline(searchQuery)
+      setSearchResults(res || []);
+      setSearchModalVisible(true);  
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+    setItems(items.map(i => (i[0] === item[0] ? item : i)));
+  };
+  const handleBarcodeScanned = (barcode) => {
+    setScannerVisible(false);
+    addItemToDB(barcode);
+  };
+
+
+  const openAddModal = (item) => {
+    setSelectedItem(item);
+    setQuantity('');
+    setmodalAddVisible(true);
+  };
+
+  const openModifyModal = (item) => {
+    setSelectedItem({ ...item._raw });
+    setmodalModifyVisible(true);
+  };
+
+  /**
+   * Add selected item to journal when button pressed
+   */
+  const addToJournal = async () => {
+    if (!quantity.trim()) return;
+    // ? usefull?
+
+    //todo: look if can just use date 
+    const timestamp = date
+
+    try {
+      console.log(selectedItem.product_name);
+      await addSavedItem(selectedItem,Number.parseFloat(quantity),timestamp);
+
+      console.log("saved/addtojournal", await getAllSavedItems());
+    } catch (err) {
+      console.error("Failed to save item to backend:", err);
+    }
+
+    setmodalAddVisible(false);
+  };
+
+  /**
+   * Add item to DB when scanned
+   * 
+   * @param {int} barcode 
+   */
+  const addItemToDB = async(barcode) => {
+    try {
+      const in_db = await getItemByCode(barcode);
+      if (in_db.length !=0){
+        console.log("Already in DB");
+        return
+      }
+        const res = await insertProductFromAPI(barcode);
+        console.log("Backend response additemtodb:", res);
+
+        const [lastItem] = await getItemByCode(barcode); 
+        if (lastItem) {
+          setItems((prevItems) => [...prevItems, lastItem]);
+        }
+        
+    } catch (err) {
+      console.error("Failed to send to backend:", err);
+    }
+  }
+  /**
+   * Add item to DB when searched
+   * 
+   * @param {object} item
+   */
+  const addItemToDBbySearch = async(item) => {
+    try {
+      const in_db = await getItemByCode(item.code);
+      if (in_db.length !=0){
+        console.log("Already in DB");
+        return
+      }
+      const res = await insertProductBySearch(item);
+      console.log("Backend response additemtodbbysearch:", res);
+
+      const [lastItem] = await getItemByCode(item.code); 
+      if (lastItem) {
+        setItems((prevItems) => [...prevItems, lastItem]);
+      }
+        
+    } catch (err) {
+      console.error("Failed to send to backend:", err);
+    }
+  }
+  
+  /**
+   * Modify item in DB when button pressed
+   * 
+   * @param {obj} item 
+   */
   const modifyToDB = async (item) => {
     try {
       await modifyProduct(item);
@@ -183,6 +197,11 @@ export default function SavedItemsScreen({route}) {
     }
   };
 
+  /**
+   * Delete item from DB when button pressed
+   * 
+   * @param {obj} item 
+   */
   const deleteData = async (item) => {
     const code = item.code;
     
@@ -197,7 +216,7 @@ export default function SavedItemsScreen({route}) {
 
 
 
-
+  //! replace hyphens with underscores in field names and remove code from editable fields
   const editableFields = Object.keys(fieldIndexMap).map(k => k.replace(/-/g,'_')).filter(k => k !== "code");
 
   return (
@@ -307,7 +326,6 @@ export default function SavedItemsScreen({route}) {
               data={editableFields}
               keyExtractor={(item) => item}
               renderItem={({ item: fieldName }) => {
-                const index = fieldIndexMap[fieldName];
                 const value = selectedItem?.[fieldName] ?? '';
 
                 return (
@@ -315,12 +333,12 @@ export default function SavedItemsScreen({route}) {
                     <Text>{fieldName.replace(/_/g, ' ')}:</Text>
                     <TextInput
                       value={String(value)}
-                      keyboardType={typeof value === 'number' || !isNaN(value) ? 'numeric' : 'default'}
+                      keyboardType={typeof value === 'number' || !Number.isNaN(value) ? 'numeric' : 'default'}
                       style={styles.input}
                       onChangeText={(text) =>
                         setSelectedItem((prev) => ({
                           ...prev,
-                          [fieldName]: isNaN(Number(text)) ? text : Number(text),       // update only the edited field
+                          [fieldName]: Number.isNaN(Number(text)) ? text : Number(text),       // update only the edited field
                         }))
                       }
                     />
@@ -340,35 +358,3 @@ export default function SavedItemsScreen({route}) {
     </View>
   );
 }
-/* 
-      <Modal visible={modalModifyVisible} transparent={true} animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={editableFields}
-              keyExtractor={(item) => item}
-              renderItem={({ item: fieldName }) => {
-                const index = fieldIndexMap[fieldName];
-                const value = selectedItem?.[fieldName] ?? '';
-
-                return (
-                  <View style={styles.listItem}>
-                    <Text>{fieldName.replace(/_/g, ' ')}:</Text>
-                    <TextInput
-                      value={String(value)}
-                      keyboardType={typeof value === 'number' || !isNaN(value) ? 'numeric' : 'default'}
-                      style={styles.input}
-                      onChangeText={(text) => {
-                        const newSelected = selectedItem;
-                        newSelected[value] = [isNaN(text) ? text : parseFloat(text)];
-                        setSelectedItem(newSelected);
-                      }}
-                    />
-                  </View>
-                );
-              }}
-            />
-
-            <Button title="Save Changes" onPress={() => modifyToDB(selectedItem)} />
-            <Button title="Cancel" onPress={() => setmodalModifyVisible(false)} color="gray" />
-*/

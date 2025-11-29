@@ -1,6 +1,15 @@
 import { database } from './watermelondb/database';
 import { Q } from "@nozbe/watermelondb";
 
+
+//? await database get usefull?
+// ? replace by replaceall
+// ? for each should be for.. of?
+
+
+
+//! The food_items database is for all the item scanned or searched for
+//! They are stored localy to be used in the journal db
 const fields = [
       "energy_100g", "energy-kcal_100g", "proteins_100g", "carbohydrates_100g", "sugars_100g",
       "glucose_100g", "fructose_100g", "lactose_100g", "fat_100g",
@@ -12,16 +21,22 @@ const fields = [
       "nutrition-score-uk_100g"
     ];
 
+// Retrieves all saved food items from the database
 export const getAllItems = async () => {
   const collection = await database.get('food_items').query().fetch();
   return collection;
 };
-
+// Retrieves a specific food item by its barcode
 export const getItemByCode = async (code) => {
   const item = await database.get('food_items').query(Q.where('code', code));
   return item;
 };
-
+/**
+ * Insert a product into the database by fetching data from OpenFoodFacts API
+ * 
+ * @param {int} barcode 
+ * @returns {status: string, name?: string} no product/stored/error , ?/product name/?
+ */
 export const insertProductFromAPI = async (barcode) => {
   try {
     const res = await fetch(`https://world.openfoodfacts.net/api/v3/product/${barcode}?fields=product_name,abbreviated_product_name,generic_name,nutriments`);
@@ -30,6 +45,7 @@ export const insertProductFromAPI = async (barcode) => {
     
     if (!product) return { status: "no product" };
 
+    // Merge the different estimated nutriments into a better one
     mergeEstimatedNutriments(product);
 
     const nutr = product.nutriments || {};
@@ -38,9 +54,9 @@ export const insertProductFromAPI = async (barcode) => {
       product_name: product.abbreviated_product_name  || product.product_name || product.generic_name || "Unknown",
     };
 
-
+    // Change hyphen to underscore for DB fields
     fields.forEach(f => {
-      values[f.replace(/-/g, '_')] = parseFloat(nutr[f]) || 0;
+      values[f.replace(/-/g, '_')] = Number.parseFloat(nutr[f]) || 0;
     });
 
     const collection = await database.get('food_items');
@@ -60,7 +76,12 @@ export const insertProductFromAPI = async (barcode) => {
 };
 
 
-
+/**
+ * Insert a product into the database from a searched item object
+ * 
+ * @param {object} searched_item 
+ * @returns {status: string, name?: string} storedbysearch/error , product name/?
+ */
 export const insertProductBySearch = async (searched_item) => {
   try {
     const nutr = searched_item.nutriments || {};
@@ -69,6 +90,7 @@ export const insertProductBySearch = async (searched_item) => {
       product_name: searched_item.product_name  || "Unknown",
     };
 
+    // Change hyphen to underscore for DB fields
     fields.forEach(f => {
       values[f.replace(/-/g, '_')] = parseFloat(nutr[f]) || 0;
     });
@@ -89,17 +111,22 @@ export const insertProductBySearch = async (searched_item) => {
   }
 };
 
-
+/**
+ * Modify an existing product in the database
+ * 
+ * @param {object} updatedItem 
+ */
 export const modifyProduct = async (updatedItem) => {
   try {
     if (!updatedItem.code) {
       throw new Error("Missing primary key field: code");
     }
 
-    const matches = await database.get("food_items") // ✅ corrected collection
+    const matches = await database.get("food_items")
       .query(Q.where("code", updatedItem.code))
       .fetch();
 
+    //? change to error throw?
     if (matches.length === 0) {
       console.warn("No item found to modify:", updatedItem);
       return;
@@ -122,11 +149,15 @@ export const modifyProduct = async (updatedItem) => {
 };
 
 
-
-export const deleteProduct = async (code) => {
+/**
+ * Deletes a product from the database by its barcode
+ * 
+ * @param {int} barcode 
+ */
+export const deleteProduct = async (barcode) => {
   const collection = await database.get('food_items');
   const all = await collection.query().fetch();
-  const toDelete = all.find(i => i.code === code);
+  const toDelete = all.find(i => i.code === barcode);
   if (toDelete) {
     await database.write(async () => {
       await toDelete.markAsDeleted();
@@ -135,11 +166,17 @@ export const deleteProduct = async (code) => {
   }
 };
 
+/**
+ * searches for food products online using a query (not barcode) in OpenFoodFacts API
+ * 
+ * @param {string} query 
+ * @returns {Array} filtered products with kcal,name and nutrients
+ */
 export const searchFoodOnline = async (query) => {
   const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1`);
   const data = await res.json();
 
-
+  // check if name, kcal, nutrients data are present in quantity
   const filtered = data.products
   .map((p) => mergeEstimatedNutriments(p))
   .filter((p) => {
@@ -151,6 +188,12 @@ export const searchFoodOnline = async (query) => {
   // 3. Limit to 30 items
   return filtered.slice(0, 30)
 };
+
+/**
+ * 
+ * @param {object} p 
+ * @returns {boolean}
+ */
 const checkHasKcal = (p) => {
   if (!p?.nutriments) return false;
 
@@ -166,6 +209,11 @@ const checkHasKcal = (p) => {
   return false;
 };
 
+/**
+ * 
+ * @param {object} p 
+ * @returns {boolean}
+ */
 const checkHasName = (p) => {
   const { abbreviated_product_name, product_name, generic_name } = p;
 
@@ -187,6 +235,11 @@ const checkHasName = (p) => {
   return false;
 };
 
+/**
+ * 
+ * @param {object} p 
+ * @returns {object}
+ */
 const mergeEstimatedNutriments = (p) => {
   if (!p.nutriments) p.nutriments = {};
   const estimated = p.nutriments_estimated || {};
@@ -201,6 +254,6 @@ const mergeEstimatedNutriments = (p) => {
     }
   }
 
-  return p; // returns the updated product
+  return p; 
 };
 

@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { View, Button, FlatList, Text, TouchableOpacity } from 'react-native';
 import styles from './JournalScreen.styles';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import {IP} from './config';
 
 import { getSavedItemsByDate, deleteSavedItem, } from '../backendjs/jssaved_item';
 
@@ -11,16 +10,16 @@ export default function JournalScreen({route}) {
   const [items, setItems] = useState([]);
   const navigation = useNavigation();
   const { date } = route.params;
-  console.log("*/*/*/*",date)
 
   const getTodayDate = () => {
     return date.toISOString().split('T')[0];
-    //return new Date().toISOString().split('T')[0];
   };
 
+  /**
+   * Fetch saved items for today
+  */
   const fetchTodayItems = async () => {
     try {
-      //const res = await fetch(IP+`/saved/by-date/${getTodayDate()}`);
       const res = await getSavedItemsByDate(getTodayDate());
       console.log("res:journal/saveditemtoday",res);
       if (res.length!=0){ 
@@ -44,6 +43,7 @@ export default function JournalScreen({route}) {
   useFocusEffect(useCallback(() => {
     fetchTodayItems();
   }, []));
+  
 const removeItem = async (id, code, timestamp) => {
   try {
     await deleteSavedItem(code,timestamp);
