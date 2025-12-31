@@ -49,4 +49,137 @@ export default StyleSheet.create({
     marginTop: 5,
     alignItems: 'center',
   },
+
+
+  actionButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  smallButton: {
+    flex: 1,
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  smallButtonText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  filterContainer: {
+    padding: 10,
+    backgroundColor: '#252222ff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#252222ff',
+  },
+  filterInput: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 10,
+  },
+  categoryChips: {
+    flexDirection: 'row',
+    paddingVertical: 5,
+  },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    marginRight: 8,
+  },
+  chipSelected: {
+    backgroundColor: '#4CAF50',
+  },
+  chipText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  chipTextSelected: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  categoryBadge: {
+    fontSize: 11,
+    color: '#666',
+    backgroundColor: '#e8f5e9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  categoryButton: {
+    backgroundColor: '#2196F3',
+    padding: 15,
+    borderRadius: 10,
+    margin: 5,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  categoryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingHorizontal: 10,
+  },
+  nutritionLabel: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  nutritionValue: {
+    color: '#666',
+    fontSize: 14,
+  },
+  modifyScrollView: {
+    maxHeight: 400,
+  },
+  modifySectionContainer: {
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modifySectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  categoryChipsModify: {
+    flexDirection: 'row',
+    paddingVertical: 5,
+  },
 });
+
+

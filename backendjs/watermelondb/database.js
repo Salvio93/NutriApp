@@ -16,7 +16,7 @@ import Garmin from './Garmin';
 // import other models as needed
 
 const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     userSchema,
     foodSchema,

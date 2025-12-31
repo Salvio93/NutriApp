@@ -37,7 +37,7 @@ export const getItemByCode = async (code) => {
  * @param {int} barcode 
  * @returns {status: string, name?: string} no product/stored/error , ?/product name/?
  */
-export const insertProductFromAPI = async (barcode) => {
+export const insertProductFromAPI = async (barcode, category = null) => {
   try {
     const res = await fetch(`https://world.openfoodfacts.net/api/v3/product/${barcode}?fields=product_name,abbreviated_product_name,generic_name,nutriments`);
     const json = await res.json();
@@ -52,6 +52,7 @@ export const insertProductFromAPI = async (barcode) => {
     const values = {
       code: barcode,
       product_name: product.abbreviated_product_name  || product.product_name || product.generic_name || "Unknown",
+      category: category || null, // Add category
     };
 
     // Change hyphen to underscore for DB fields
@@ -82,12 +83,13 @@ export const insertProductFromAPI = async (barcode) => {
  * @param {object} searched_item 
  * @returns {status: string, name?: string} storedbysearch/error , product name/?
  */
-export const insertProductBySearch = async (searched_item) => {
+export const insertProductBySearch = async (searched_item, category=null) => {
   try {
     const nutr = searched_item.nutriments || {};
     const values = {
       code: searched_item.code,
       product_name: searched_item.product_name  || "Unknown",
+      category: category || null, // Add category
     };
 
     // Change hyphen to underscore for DB fields
@@ -188,6 +190,43 @@ export const searchFoodOnline = async (query) => {
   // 3. Limit to 30 items
   return filtered.slice(0, 30)
 };
+
+
+/**
+ * Get items filtered by name and/or category
+ * 
+ * @param {string} searchTerm 
+ * @param {string} category 
+ * @returns {Array} filtered items
+ */
+export const getItemsByNameAndCategory = async (searchTerm, category) => {
+  const queries = [];
+  
+  if (searchTerm?.trim()) {
+    queries.push(Q.where('product_name', Q.like(`%${Q.sanitizeLikeString(searchTerm)}%`)));
+  }
+  
+  if (category && category !== 'all') {
+    queries.push(Q.where('category', category));
+  }
+  
+  const collection = await database.get('food_items').query(...queries).fetch();
+  return collection;
+};
+
+/**
+ * Get items by category only
+ * 
+ * @param {string} category 
+ * @returns {Array} filtered items
+ */
+export const getItemsByCategory = async (category) => {
+  const collection = await database.get('food_items')
+    .query(Q.where('category', category))
+    .fetch();
+  return collection;
+};
+
 
 /**
  * 

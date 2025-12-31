@@ -5,6 +5,7 @@ export const foodSchema = tableSchema({
   columns: [
     { name: 'code', type: 'string' },
     { name: 'product_name', type: 'string' },
+    { name: 'category', type: 'string', isOptional: true },
     ...[
       "energy_100g", "energy-kcal_100g", "proteins_100g", "carbohydrates_100g", "sugars_100g",
       "glucose_100g", "fructose_100g", "lactose_100g", "fat_100g",

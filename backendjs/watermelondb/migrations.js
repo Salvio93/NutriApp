@@ -23,5 +23,16 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 4, // bump schema version
+      steps: [
+        addColumns({
+          table: 'food_items',
+          columns: [
+            { name: 'category', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

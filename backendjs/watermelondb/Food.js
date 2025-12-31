@@ -6,6 +6,7 @@ export default class Food extends Model {
 
   @field('code') code;
   @field('product_name') product_name;
+  @field('category') category
 
   @field('energy_100g') energy_100g;
   @field('energy_kcal_100g') energy_kcal_100g;

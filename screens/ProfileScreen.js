@@ -8,9 +8,9 @@ import { getUserData, updateUserData, initUserData } from '../backendjs/jsuser_d
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState({
-    gender: 'homme',
-    age: '21',
-    height: '175',
+    gender: 'H',
+    age: '24',
+    height: '176',
     weight: '65',
     kcal: '2300'
   });

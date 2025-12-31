@@ -1,17 +1,30 @@
 import React, { useEffect, useState,useCallback  } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
+
 import {
-  View, FlatList, Text, TextInput, StyleSheet, Modal, Button, TouchableOpacity, Keyboard
+  View, FlatList, Text, TextInput, StyleSheet, Modal, Button, TouchableOpacity, Keyboard, ScrollView
 } from 'react-native';
 import styles from './SavedItemsScreen.style';
 import BarcodeScanner from '../components/BarcodeScanner';
 
-import { getAllItems, getLastItem,insertProductBySearch, insertProductFromAPI, modifyProduct, deleteProduct, searchFoodOnline, getItemByName, getItemByCode } from '../backendjs/jsmain';
+import { getAllItems, getLastItem,insertProductBySearch, insertProductFromAPI, modifyProduct, deleteProduct, searchFoodOnline, getItemByName, getItemByCode,getItemsByNameAndCategory } from '../backendjs/jsmain';
 import { addSavedItem, getAllSavedItems  } from '../backendjs/jssaved_item';
 
 //? replace to replaceall?
 
+const CATEGORIES = [
+  { value: 'all', label: 'All' },
+  { value: 'morning', label: 'Morning' },
+  { value: 'noon', label: 'Noon' },
+  { value: 'afternoon', label: 'Afternoon' },
+  { value: 'fruit', label: 'Fruit' },
+  { value: 'vegetable', label: 'Vegetable' },
+  { value: 'meat', label: 'Meat' },
+  { value: 'glucide', label: 'Glucide' },
+  { value: 'drink', label: 'Drink' },
+  { value: 'junkfood', label: 'Junk Food' },
+];
 export default function SavedItemsScreen({route}) {
   const { date } = route.params;
 
@@ -25,6 +38,13 @@ export default function SavedItemsScreen({route}) {
   const [modalModifyVisible, setmodalModifyVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
 
+  const [nameFilter, setNameFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [scanOnlyModalVisible, setScanOnlyModalVisible] = useState(false);
+  const [scannedNutritionData, setScannedNutritionData] = useState(null);
+  const [categorySelectModalVisible, setCategorySelectModalVisible] = useState(false);
+  const [pendingBarcode, setPendingBarcode] = useState(null);
+  const [scanMode, setScanMode] = useState('save'); // 'save' or 'info'
 
   const fieldIndexMap = {
     "code": 0,
@@ -82,6 +102,26 @@ export default function SavedItemsScreen({route}) {
   }, []));
 
   
+  // Apply filters whenever nameFilter or categoryFilter changes
+  const applyFilters = async () => {
+    try {
+      if (!nameFilter && categoryFilter === 'all') {
+        fetchall(); 
+      } else {
+        const filtered = await getItemsByNameAndCategory(nameFilter, categoryFilter);
+        setItems(filtered || []);
+      }
+    } catch (err) {
+      console.error("Failed to filter items:", err);
+    }
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, [nameFilter, categoryFilter]);
+
+
+
   const handleSearchSubmit = async () => {
     try {
       Keyboard.dismiss();
@@ -93,12 +133,48 @@ export default function SavedItemsScreen({route}) {
     }
     setItems(items.map(i => (i[0] === item[0] ? item : i)));
   };
+  
   const handleBarcodeScanned = (barcode) => {
     setScannerVisible(false);
-    addItemToDB(barcode);
+    
+    if (scanMode === 'save') {
+      // Show category selection modal
+      setPendingBarcode(barcode);
+      setCategorySelectModalVisible(true);
+    } else {
+      // Scan for info only
+      handleBarcodeScanOnly(barcode);
+    }
+  };
+
+  // Called after category is selected
+  const handleCategorySelected = async (category) => {
+    setCategorySelectModalVisible(false);
+    if (pendingBarcode) {
+      await addItemToDB(pendingBarcode, category);
+      setPendingBarcode(null);
+    }
   };
 
 
+  // Scan only for nutrition info (doesn't save to DB)
+  const handleBarcodeScanOnly = async (barcode) => {
+    try {
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const data = await response.json();
+      
+      if (data.status === 1 && data.product) {
+        setScannedNutritionData(data.product);
+        setScanOnlyModalVisible(true);
+      } else {
+        alert('Product not found');
+      }
+    } catch (err) {
+      console.error("Failed to fetch nutrition data:", err);
+      alert('Error fetching product information');
+    }
+  };
+  
   const openAddModal = (item) => {
     setSelectedItem(item);
     setQuantity('');
@@ -137,14 +213,14 @@ export default function SavedItemsScreen({route}) {
    * 
    * @param {int} barcode 
    */
-  const addItemToDB = async(barcode) => {
+  const addItemToDB = async(barcode,category) => {
     try {
       const in_db = await getItemByCode(barcode);
       if (in_db.length !=0){
         console.log("Already in DB");
         return
       }
-        const res = await insertProductFromAPI(barcode);
+        const res = await insertProductFromAPI(barcode,category);
         console.log("Backend response additemtodb:", res);
 
         const [lastItem] = await getItemByCode(barcode); 
@@ -191,7 +267,7 @@ export default function SavedItemsScreen({route}) {
       await modifyProduct(item);
 
       setmodalModifyVisible(false);
-      fetchall();
+      applyFilters();
     } catch (err) {
       console.error("Failed to update item:", err);
     }
@@ -217,26 +293,142 @@ export default function SavedItemsScreen({route}) {
 
 
   //! replace hyphens with underscores in field names and remove code from editable fields
-  const editableFields = Object.keys(fieldIndexMap).map(k => k.replace(/-/g,'_')).filter(k => k !== "code");
+  const editableFields = Object.keys(fieldIndexMap).map(k => k.replace(/-/g,'_')).filter(k => k !== "code" && k !== "category");
 
   return (
     <View style={styles.container}>
 
-      <TouchableOpacity style={styles.roundButton} onPress={() => setSearchModalVisible(true)}>
-      <Text style={styles.buttonText}>🔍 Search Food</Text>
-      </TouchableOpacity>
 
+      <View style={styles.filterContainer}>
+        <TextInput
+          style={styles.filterInput}
+          placeholder="Filter by name..."
+          value={nameFilter}
+          onChangeText={setNameFilter}
+        />
+        
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.categoryChips}>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity
+                key={cat.value}
+                style={[
+                  styles.chip,
+                  categoryFilter === cat.value && styles.chipSelected
+                ]}
+                onPress={() => setCategoryFilter(cat.value)}
+              >
+                <Text style={[
+                  styles.chipText,
+                  categoryFilter === cat.value && styles.chipTextSelected
+                ]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
-      
+      <View style={styles.actionButtonsRow}>
+        <TouchableOpacity 
+          style={styles.smallButton} 
+          onPress={() => setSearchModalVisible(true)}
+        >
+          <Text style={styles.smallButtonText}>🔍 Search</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.roundButton} onPress={() => setScannerVisible(true)}>
-      <Text style={styles.buttonText}>📷 Scan Barcode</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.smallButton} 
+          onPress={() => {
+            setScanMode('save');
+            setScannerVisible(true);
+          }}
+        >
+          <Text style={styles.smallButtonText}>📷 Save</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.smallButton} 
+          onPress={() => {
+            setScanMode('info');
+            setScannerVisible(true);
+          }}
+        >
+          <Text style={styles.smallButtonText}>🔎 Info</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Scanner Modal */}
       <Modal visible={scannerVisible} animationType="slide">
         <BarcodeScanner onScanned={handleBarcodeScanned} />
         <Button title="Cancel" onPress={() => setScannerVisible(false)} />
       </Modal>
 
+
+      {/* Category Selection Modal (after scanning) */}
+      <Modal visible={categorySelectModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Category</Text>
+            <View style={styles.categoryGrid}>
+              {CATEGORIES.filter(c => c.value !== 'all').map(cat => (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={styles.categoryButton}
+                  onPress={() => handleCategorySelected(cat.value)}
+                >
+                  <Text style={styles.categoryButtonText}>{cat.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Button 
+              title="Skip (No Category)" 
+              onPress={() => handleCategorySelected(null)} 
+              color="gray" 
+            />
+          </View>
+        </View>
+      </Modal>
+
+      
+      {/* Scan Only Modal - Shows nutrition info */}
+      <Modal visible={scanOnlyModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Nutrition Information</Text>
+            {scannedNutritionData && (
+              <ScrollView>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Product:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.product_name || 'N/A'}</Text>
+                </View>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Energy:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.nutriments?.['energy-kcal_100g'] || 'N/A'} kcal</Text>
+                </View>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Proteins:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.nutriments?.proteins_100g || 'N/A'} g</Text>
+                </View>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Carbs:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.nutriments?.carbohydrates_100g || 'N/A'} g</Text>
+                </View>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Fat:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.nutriments?.fat_100g || 'N/A'} g</Text>
+                </View>
+                <View style={styles.nutritionRow}>
+                  <Text style={styles.nutritionLabel}>Fiber:</Text>
+                  <Text style={styles.nutritionValue}>{scannedNutritionData.nutriments?.fiber_100g || 'N/A'} g</Text>
+                </View>
+              </ScrollView>
+            )}
+            <Button title="Close" onPress={() => setScanOnlyModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
 
       <FlatList
         data={items}
@@ -247,6 +439,9 @@ export default function SavedItemsScreen({route}) {
             <Text style={styles.name}>
               {item['product_name'] || 'Unnamed Item'}
             </Text>
+            {item['category'] && (
+              <Text style={styles.categoryBadge}>{item['category']}</Text>
+            )}
 
             {/* Buttons in a row below the name */}
             <View style={styles.buttonRow}>
@@ -319,17 +514,43 @@ export default function SavedItemsScreen({route}) {
         </View>
       </Modal>
 
+      
+      {/* Modify Modal */}
       <Modal visible={modalModifyVisible} transparent={true} animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
-            <FlatList
-              data={editableFields}
-              keyExtractor={(item) => item}
-              renderItem={({ item: fieldName }) => {
-                const value = selectedItem?.[fieldName] ?? '';
+            <ScrollView style={styles.modifyScrollView}>
+              {/* Category Selection with Horizontal Scroll */}
+              <View style={styles.modifySectionContainer}>
+                <Text style={styles.modifySectionTitle}>Category:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.categoryChipsModify}>
+                    {CATEGORIES.filter(c => c.value !== 'all').map(cat => (
+                      <TouchableOpacity
+                        key={cat.value}
+                        style={[
+                          styles.chip,
+                          selectedItem?.category === cat.value && styles.chipSelected
+                        ]}
+                        onPress={() => setSelectedItem(prev => ({ ...prev, category: cat.value }))}
+                      >
+                        <Text style={[
+                          styles.chipText,
+                          selectedItem?.category === cat.value && styles.chipTextSelected
+                        ]}>
+                          {cat.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
 
+              {/* Other Editable Fields */}
+              {editableFields.map((fieldName) => {
+                const value = selectedItem?.[fieldName] ?? '';
                 return (
-                  <View style={styles.listItem}>
+                  <View key={fieldName} style={styles.listItem}>
                     <Text>{fieldName.replace(/_/g, ' ')}:</Text>
                     <TextInput
                       value={String(value)}
@@ -338,18 +559,17 @@ export default function SavedItemsScreen({route}) {
                       onChangeText={(text) =>
                         setSelectedItem((prev) => ({
                           ...prev,
-                          [fieldName]: Number.isNaN(Number(text)) ? text : Number(text),       // update only the edited field
+                          [fieldName]: Number.isNaN(Number(text)) ? text : Number(text),
                         }))
                       }
                     />
                   </View>
                 );
-              }}
-            />
+              })}
+            </ScrollView>
 
             <Button title="Save Changes" onPress={() => modifyToDB(selectedItem)} />
             <Button title="Cancel" onPress={() => setmodalModifyVisible(false)} color="gray" />
-
           </View>
         </View>
       </Modal>
